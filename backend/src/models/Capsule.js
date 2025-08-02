@@ -25,11 +25,7 @@ const capsuleSchema = new mongoose.Schema(
     },
     friends: [
       {
-        userId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
+        email: { type: String, required: true },
         verified: { type: Boolean, default: false },
       },
     ],
