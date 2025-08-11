@@ -15,6 +15,7 @@ module.exports = {
       },
       fontFamily: {
         orbitron: ['"Orbitron"', 'sans-serif'],
+        inter:['"Inter"','sans-serif'],
       },
     },
   },
