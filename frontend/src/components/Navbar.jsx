@@ -36,7 +36,7 @@ const Navbar = () => {
 
             {/* Dropdown menu */}
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-black text-white rounded-lg shadow-lg overflow-hidden">
+              <div className="absolute right-0 mt-2 w-48 bg-black text-white rounded-lg shadow-lg overflow-hidden z-10">
                 <Link
                   to="/dashboard"
                   className="block px-4 py-2 hover:bg-hero hover:text-black transition"
