@@ -1,50 +1,61 @@
-import s3 from "../utils/s3.js";
+// src/controllers/uploadController.js
+import asyncHandler from "express-async-handler";
+import cloudinary from "../utils/cloudinary.js";
+import { v4 as uuidv4 } from "uuid";
 
-export const uploadSingle = async (req, res) => {
-  try {
-    if (!req.file) return res.status(400).json({ message: "No file provided" });
-
-    const file = req.file;
-    const key = `capsules/${Date.now()}-${file.originalname}`;
-
-    const params = {
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-
-    const data = await s3.upload(params).promise();
-
-    return res.status(200).json({ url: data.Location, key: data.Key });
-  } catch (error) {
-    console.error("Upload error:", error);
-    return res.status(500).json({ message: "Upload failed", error: error.message });
+export const uploadFile = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    res.status(400);
+    throw new Error("No file uploaded");
   }
-};
 
-export const uploadMultiple = async (req, res) => {
   try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: "No files provided" });
-    }
-
-    const uploadPromises = req.files.map((file) => {
-      const key = `capsules/${Date.now()}-${file.originalname}`;
-      const params = {
-        Bucket: process.env.AWS_BUCKET_NAME,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      };
-      return s3.upload(params).promise();
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: "auto", public_id: uuidv4() },
+        (error, uploadResult) => {
+          if (error) reject(error);
+          else resolve(uploadResult);
+        }
+      );
+      stream.end(req.file.buffer);
     });
 
-    const results = await Promise.all(uploadPromises);
-    const urls = results.map((r) => ({ url: r.Location, key: r.Key }));
-    return res.status(200).json({ files: urls });
-  } catch (error) {
-    console.error("Upload multiple error:", error);
-    return res.status(500).json({ message: "Upload failed", error: error.message });
+    res.json({ url: result.secure_url });
+  } catch (err) {
+    console.error("Upload error:", err);
+    res.status(500);
+    throw new Error("File upload failed");
   }
-};
+});
+
+export const uploadMultiple = asyncHandler(async (req, res) => {
+  if (!req.files || req.files.length === 0) {
+    res.status(400);
+    throw new Error("No files uploaded");
+  }
+
+  try {
+    const urls = [];
+
+    for (const file of req.files) {
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "auto", public_id: uuidv4() },
+          (error, uploadResult) => {
+            if (error) reject(error);
+            else resolve(uploadResult);
+          }
+        );
+        stream.end(file.buffer);
+      });
+      urls.push(result.secure_url);
+    }
+
+    res.json({ urls });
+  } catch (err) {
+    console.error("Multiple upload error:", err);
+    res.status(500);
+    throw new Error("Multiple file upload failed");
+  }
+});

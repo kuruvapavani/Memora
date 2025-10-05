@@ -1,58 +1,47 @@
 import User from "../models/User.js";
-import generateToken from "../config/generateToken.js";
+import admin from "../utils/firebaseAdmin.js";
 
-//register user
-
-export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: "Please provide all fields" });
-  }
-
+export const firebaseSignIn = async (req, res) => {
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists" });
+    const { email, password, name } = req.body;
+    let firebaseUser;
+    try {
+      firebaseUser = await admin.auth().getUserByEmail(email);
+    } catch (err) {
+      if (err.code === "auth/user-not-found") {
+        firebaseUser = await admin.auth().createUser({
+          email,
+          password,
+          displayName: name || "Anonymous",
+        });
+      } else {
+        throw err;
+      }
+    }
 
-    const user = await User.create({ name, email, password });
+    let user = await User.findOne({ uid: firebaseUser.uid });
 
-    res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user._id),
+    if (!user) {
+      user = await User.create({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: firebaseUser.displayName || "Anonymous",
+      });
+      return res.status(201).json({
+        message: "User created in Firebase and MongoDB",
+        user,
+      });
+    }
+
+    res.json({
+      message: "User already exists, synchronized successfully",
+      user,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-};
-
-// Login User
-
-export const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res
-      .status(400)
-      .json({ message: "Please provide email and password" });
-  }
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
-      });
-    } else {
-      res.status(401).json({ message: "Invalid email or password" });
-    }
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Firebase sign-in error:", error);
+    res.status(500).json({
+      message: "Server error during Firebase signup/signin",
+      error: error.message,
+    });
   }
 };
