@@ -7,6 +7,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import MyCapsules from "./pages/MyCapsules";
+import CreateCapsule from "./pages/CreateCapsule";
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />}/>
         <Route path="/my-capsules" element={<MyCapsules />}  />
+        <Route path="/create-capsule" element={<CreateCapsule />} />
       </Routes>
     </Router>
   );

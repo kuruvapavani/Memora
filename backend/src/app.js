@@ -7,7 +7,8 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
 app.get('/', (req, res) => {
   res.send('Memora API is running...');
@@ -16,5 +17,12 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/capsule',capsuleRoutes);
 app.use('/api/upload',uploadRoutes);
+app.use((req, res, next) => {
+  res.setTimeout(10 * 60 * 1000, () => {
+    console.log("Request timed out.");
+    res.status(408).send("Request Timeout");
+  });
+  next();
+});
 
 export default app;
