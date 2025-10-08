@@ -6,3 +6,16 @@ body{
   background-color : black;
   color : white;
 }
+
+.animate-pulse-slow {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(0, 200, 255, 0.6);
+  }
+}
