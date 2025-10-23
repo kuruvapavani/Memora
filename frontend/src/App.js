@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import MyCapsules from "./pages/MyCapsules";
 import CreateCapsule from "./pages/CreateCapsule";
 import OpenCapsule from "./pages/OpenCapsule";
+import ErrorPage from "./pages/ErrorPage";
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
         <Route path="/my-capsules" element={<MyCapsules />}  />
         <Route path="/create-capsule" element={<CreateCapsule />} />
         <Route path="/capsule/:id" element={<OpenCapsule />} />
+        <Route path="*" element={<ErrorPage />} />
       </Routes>
     </Router>
   );
