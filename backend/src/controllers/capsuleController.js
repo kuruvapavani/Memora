@@ -1,16 +1,25 @@
 import Capsule from "../models/Capsule.js";
+import sendEmail from "../utils/sendEmail.js";
 
+import creatorEmailTemplate from "../utils/email-templates/creatorEmailTemplate.js";
+import friendInviteEmailTemplate from "../utils/email-templates/friendInviteEmailTemplate.js";
 export const createCapsule = async (req, res) => {
   try {
     const { title, text, media, openDate, friends } = req.body;
 
     if (!title || !openDate || !friends || friends.length === 0) {
-      return res.status(400).json({ message: "Title, open date, and friends are required." });
+      return res
+        .status(400)
+        .json({ message: "Title, open date, and friends are required." });
     }
 
-    const formattedFriends = friends.map(friend => ({
+    const creatorEmail = req.user.email;
+    const creatorName = req.user.name || "Creator";
+    const capsuleTitle = title;
+
+    const formattedFriends = friends.map((friend) => ({
       email: friend.email,
-      verified: false
+      verified: false,
     }));
 
     const capsule = await Capsule.create({
@@ -19,16 +28,44 @@ export const createCapsule = async (req, res) => {
       media: {
         images: media?.images || [],
         videos: media?.videos || [],
-        voiceMessages: media?.voiceMessages || []
+        voiceMessages: media?.voiceMessages || [],
       },
       openDate,
       creator: req.user._id,
-      friends: formattedFriends
+      friends: formattedFriends,
     });
+
+    try {
+      await sendEmail(
+        creatorEmail,
+        "Your Capsule is Created ✨",
+        creatorEmailTemplate(creatorName, capsuleTitle, openDate)
+      );
+    } catch (err) {
+      console.error("Error sending email to creator:", err);
+    }
+
+    for (const friend of formattedFriends) {
+      try {
+        const friendName = friend.email.split("@")[0];
+        await sendEmail(
+          friend.email,
+          "You've Been Invited 📩",
+          friendInviteEmailTemplate(
+            friendName,
+            creatorEmail,
+            capsuleTitle,
+            openDate
+          )
+        );
+      } catch (err) {
+        console.error(`Error sending invite to ${friend.email}:`, err);
+      }
+    }
 
     res.status(201).json({
       message: "Capsule created successfully",
-      capsule
+      capsule,
     });
   } catch (error) {
     console.error("Error creating capsule:", error);
@@ -41,10 +78,7 @@ export const getUserCapsules = async (req, res) => {
     const userEmail = req.user.email;
 
     const capsules = await Capsule.find({
-      $or: [
-        { creator: req.user._id },
-        { "friends.email": userEmail }
-      ]
+      $or: [{ creator: req.user._id }, { "friends.email": userEmail }],
     }).sort({ openDate: 1 });
 
     res.status(200).json({ capsules });
@@ -64,14 +98,18 @@ export const openCapsule = async (req, res) => {
     }
 
     const isCreator = capsule.creator.toString() === req.user._id.toString();
-    const isFriend = capsule.friends.some(f => f.email === req.user.email);
+    const isFriend = capsule.friends.some((f) => f.email === req.user.email);
 
     if (!isCreator && !isFriend) {
-      return res.status(403).json({ message: "You are not allowed to open this capsule." });
+      return res
+        .status(403)
+        .json({ message: "You are not allowed to open this capsule." });
     }
 
     if (new Date() < new Date(capsule.openDate)) {
-      return res.status(403).json({ message: "Capsule cannot be opened before the open date." });
+      return res
+        .status(403)
+        .json({ message: "Capsule cannot be opened before the open date." });
     }
 
     if (capsule.status === "locked") {
