@@ -5,6 +5,7 @@ import Layout from "../components/Layout";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
+import { toast } from "sonner";
 
 const MyCapsules = () => {
   const { currentUser } = useContext(AuthContext);
@@ -17,9 +18,9 @@ const MyCapsules = () => {
   useEffect(() => {
     const fetchCapsules = async () => {
       try {
-        if (!currentUser?.email) {
-          setError("No user email found. Please log in again.");
-          setLoading(false);
+        if (!currentUser) {
+          toast.error("Please log in to view your capsules.");
+          setTimeout(() => navigate("/login"), 1500);
           return;
         }
 
@@ -32,17 +33,23 @@ const MyCapsules = () => {
           }
         );
 
-        setCapsules(res.data.capsules || []);
+        const fetchedCapsules = res.data.capsules || [];
+        setCapsules(fetchedCapsules);
+
+        if (fetchedCapsules.length === 0) {
+          toast.info("No capsules found. Create your first memory!");
+        }
       } catch (err) {
         console.error(err);
         setError("Failed to fetch capsules. Please try again.");
+        toast.error("Failed to fetch capsules. Please try again.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchCapsules();
-  }, [currentUser]);
+  }, [currentUser, navigate]);
 
   useEffect(() => {
     if (cardsRef.current.length > 0) {
@@ -60,6 +67,11 @@ const MyCapsules = () => {
   }, [capsules]);
 
   const handleViewCapsule = (capsule) => {
+    const isOpenable = new Date(capsule.openDate) <= new Date();
+    if (!isOpenable) {
+      toast.warning("This capsule is still locked!");
+      return;
+    }
     navigate(`/capsule/${capsule._id}`);
   };
 
@@ -145,7 +157,6 @@ const MyCapsules = () => {
 
                     <button
                       onClick={() => handleViewCapsule(capsule)}
-                      disabled={!isOpenable}
                       className={`mt-4 w-full px-4 py-2 rounded-lg font-semibold text-black ${
                         isOpenable
                           ? "bg-hero hover:opacity-80"

@@ -5,6 +5,7 @@ import Layout from "../components/Layout";
 import { AuthContext } from "../context/AuthContext";
 import { FaLock, FaUnlock, FaSpinner } from "react-icons/fa";
 import gsap from "gsap";
+import { toast } from "sonner";
 
 const OpenCapsule = () => {
   const { id } = useParams();
@@ -19,20 +20,23 @@ const OpenCapsule = () => {
   useEffect(() => {
     const fetchCapsule = async () => {
       try {
-        if (!currentUser) return;
+        if (!currentUser) {
+          toast.error("Please log in to view your capsule!");
+          return;
+        }
+
         const token = await currentUser.getIdToken();
         const res = await axios.get(
           `${process.env.REACT_APP_BACKEND_URL}/api/capsule/${id}/open`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
         setCapsule(res.data.capsule);
       } catch (err) {
         console.error(err);
         setError("Failed to load capsule. Please try again later.");
+        toast.error("❌ Failed to load capsule!");
       } finally {
         setLoading(false);
       }
@@ -57,6 +61,11 @@ const OpenCapsule = () => {
           duration: capsule.media?.images?.length * 5,
         });
       }
+
+      const openDate = new Date(capsule.openDate);
+      if (openDate > new Date()) {
+        toast.warning("🔒 This capsule is still locked!");
+      }
     }
   }, [capsule]);
 
@@ -64,7 +73,8 @@ const OpenCapsule = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen text-white text-xl gap-3">
-          <FaSpinner className="animate-spin text-hero" /> Loading your memory...
+          <FaSpinner className="animate-spin text-hero" /> Loading your
+          memory...
         </div>
       </Layout>
     );
@@ -79,7 +89,9 @@ const OpenCapsule = () => {
   if (!capsule)
     return (
       <Layout>
-        <div className="text-center text-white/70 py-20">Capsule not found.</div>
+        <div className="text-center text-white/70 py-20">
+          Capsule not found.
+        </div>
       </Layout>
     );
 
@@ -129,17 +141,13 @@ const OpenCapsule = () => {
                 </p>
               )}
 
-              {/* 🖼 Photo Carousel with GSAP Track */}
               {capsule.media?.images?.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-orbitron text-hero mb-4">
                     📸 Photo Memories
                   </h3>
                   <div className="overflow-hidden relative w-full">
-                    <div
-                      ref={imageTrackRef}
-                      className="flex gap-4 w-max"
-                    >
+                    <div ref={imageTrackRef} className="flex gap-4 w-max">
                       {[...capsule.media.images, ...capsule.media.images].map(
                         (url, i) => (
                           <div
@@ -159,7 +167,6 @@ const OpenCapsule = () => {
                 </div>
               )}
 
-              {/* 🎥 Video Memories */}
               {capsule.media?.videos?.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-orbitron text-hero mb-4">
@@ -169,7 +176,7 @@ const OpenCapsule = () => {
                     {capsule.media.videos.map((url, i) => (
                       <div
                         key={i}
-                        className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-[1.03] hover:shadow-hero/30"
+                        className="rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-[1.03]"
                       >
                         <video
                           src={url}
@@ -182,7 +189,6 @@ const OpenCapsule = () => {
                 </div>
               )}
 
-              {/* 🎤 Voice Memories */}
               {capsule.media?.voiceMessages?.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-orbitron text-hero mb-4">
@@ -194,7 +200,11 @@ const OpenCapsule = () => {
                         key={i}
                         className="p-3 rounded-xl bg-hero/10 border border-hero/30 backdrop-blur-lg shadow-lg hover:scale-[1.02] transition-all duration-300 animate-pulse-slow"
                       >
-                        <audio src={url} controls className="w-full rounded-lg" />
+                        <audio
+                          src={url}
+                          controls
+                          className="w-full rounded-lg"
+                        />
                       </div>
                     ))}
                   </div>

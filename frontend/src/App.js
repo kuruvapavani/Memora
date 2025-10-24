@@ -10,9 +10,11 @@ import MyCapsules from "./pages/MyCapsules";
 import CreateCapsule from "./pages/CreateCapsule";
 import OpenCapsule from "./pages/OpenCapsule";
 import ErrorPage from "./pages/ErrorPage";
-
+import { Toaster } from "sonner";
 const App = () => {
   return (
+    <>
+    <Toaster position="top-right" richColors />
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -26,6 +28,7 @@ const App = () => {
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </Router>
+    </>
   );
 };
 

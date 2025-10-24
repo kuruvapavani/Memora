@@ -1,9 +1,11 @@
-import React, { useState, useRef, useContext } from "react";
+// src/pages/CreateCapsule.jsx
+import React, { useState, useRef, useContext, useEffect } from "react";
 import Layout from "../components/Layout";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { FaTrash, FaMicrophone, FaStop, FaSpinner } from "react-icons/fa";
+import { toast, Toaster } from "sonner";
 
 const CreateCapsule = () => {
   const { currentUser } = useContext(AuthContext);
@@ -33,7 +35,24 @@ const CreateCapsule = () => {
     return t.toISOString().split("T")[0];
   };
 
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!currentUser) {
+      toast.error("Please log in to access this page!", {
+        description: "Redirecting to login...",
+        duration: 3000,
+      });
+      navigate("/login");
+    }
+  }, [currentUser, navigate]);
+
   const handleFileUpload = async (files, type) => {
+    if (!currentUser) {
+      toast.error("Please log in to upload files!");
+      navigate("/login");
+      return;
+    }
+
     const token = await currentUser.getIdToken();
     const uploaded = [];
 
@@ -62,7 +81,7 @@ const CreateCapsule = () => {
         uploaded.push(res.data.url);
       } catch (err) {
         console.error("Upload failed:", file.name, err);
-        alert(`Failed to upload ${file.name}`);
+        toast.error(`Failed to upload ${file.name}`);
       } finally {
         setUploading((prev) => {
           const arr = [...prev[type]];
@@ -78,23 +97,31 @@ const CreateCapsule = () => {
   };
 
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-    audioChunksRef.current = [];
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
 
-    mediaRecorder.ondataavailable = (event) =>
-      audioChunksRef.current.push(event.data);
-    mediaRecorder.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      const audioFile = new File([audioBlob], "voice_message.wav", {
-        type: "audio/wav",
-      });
-      await handleFileUpload([audioFile], "voice");
-    };
+      mediaRecorder.ondataavailable = (event) =>
+        audioChunksRef.current.push(event.data);
 
-    mediaRecorder.start();
-    setRecording(true);
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/wav",
+        });
+        const audioFile = new File([audioBlob], "voice_message.wav", {
+          type: "audio/wav",
+        });
+        await handleFileUpload([audioFile], "voice");
+      };
+
+      mediaRecorder.start();
+      setRecording(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to start recording");
+    }
   };
 
   const stopRecording = () => {
@@ -108,8 +135,9 @@ const CreateCapsule = () => {
     setFriends(newFriends);
   };
   const addFriendField = () => setFriends([...friends, ""]);
-  const removeFriendField = (index) =>
+  const removeFriendField = (index) => {
     setFriends(friends.filter((_, i) => i !== index));
+  };
 
   const removeItem = (type, index) => {
     if (type === "images") setImages(images.filter((_, i) => i !== index));
@@ -120,6 +148,11 @@ const CreateCapsule = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      toast.error("Please log in to create a capsule!");
+      navigate("/login");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -135,10 +168,11 @@ const CreateCapsule = () => {
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      toast.success("Capsule created successfully!");
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      alert("Failed to create capsule. Please try again.");
+      toast.error("Failed to create capsule. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -380,6 +414,8 @@ const CreateCapsule = () => {
             </p>
           </div>
         )}
+
+        <Toaster position="top-center" richColors />
       </section>
     </Layout>
   );
