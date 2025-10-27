@@ -29,18 +29,10 @@ const Footer = () => {
             </li>
             <li>
               <Link
-                to="/contact"
+                to="/dashboard"
                 className="hover:text-hero transition-colors duration-300"
               >
-                Contact
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/profile"
-                className="hover:text-hero transition-colors duration-300"
-              >
-                My Profile
+                Dashboard
               </Link>
             </li>
             <li>
@@ -49,6 +41,14 @@ const Footer = () => {
                 className="hover:text-hero transition-colors duration-300"
               >
                 My Capsules
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/contact"
+                className="hover:text-hero transition-colors duration-300"
+              >
+                Contact Us
               </Link>
             </li>
           </ul>
