@@ -12,11 +12,13 @@ import OpenCapsule from "./pages/OpenCapsule";
 import ErrorPage from "./pages/ErrorPage";
 import { Toaster } from "sonner";
 import Contact from "./pages/Contact";
+import ScrollToTop from "./components/ScrollToTop";
 const App = () => {
   return (
     <>
     <Toaster position="top-right" richColors />
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
