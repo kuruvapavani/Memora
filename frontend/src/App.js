@@ -11,6 +11,7 @@ import CreateCapsule from "./pages/CreateCapsule";
 import OpenCapsule from "./pages/OpenCapsule";
 import ErrorPage from "./pages/ErrorPage";
 import { Toaster } from "sonner";
+import Contact from "./pages/Contact";
 const App = () => {
   return (
     <>
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/my-capsules" element={<MyCapsules />}  />
         <Route path="/create-capsule" element={<CreateCapsule />} />
         <Route path="/capsule/:id" element={<OpenCapsule />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="*" element={<ErrorPage />} />
       </Routes>
     </Router>

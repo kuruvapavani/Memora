@@ -56,20 +56,6 @@ const Login = () => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    const resetEmail = prompt("Enter your email to reset password:");
-    if (!resetEmail) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await sendPasswordResetEmail(resetEmail);
-      alert("Password reset email sent!");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-black via-[#001133] to-black px-4">
@@ -110,7 +96,7 @@ const Login = () => {
         </button>
 
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4 text-sm text-white/70 gap-2 sm:gap-0">
-          <button onClick={handleForgotPassword} disabled={isLoading} className="hover:text-hero transition disabled:text-gray-500">Forgot Password?</button>
+        <div>Welcome Back</div>
           <Link to="/register" className="hover:text-hero transition">Don’t have an account?</Link>
         </div>
       </div>
