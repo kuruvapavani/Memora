@@ -10,21 +10,25 @@ const Model = ({ scrollY }) => {
   const modelRef = useRef();
   const { scene } = useGLTF("/assets/memora_capsule.glb");
 
-  const sections = [
-    { scroll: 0, pos: [5, 7, 0], rot: [0, degToRad(-50), 0] },
-    { scroll: 1, pos: [-5, 0, 5], rot: [0, degToRad(50), 0] },
-    { scroll: 2, pos: [0, -17, 0], rot: [0, 0, 0] },
-  ];
+const sections = [
+  { scroll: 0, pos: [3, 9, 0], rot: [0, degToRad(-50), 0] },   // Section 1: Right
+  { scroll: 1, pos: [-3, 4, 5], rot: [0, degToRad(50), 0] },   // Section 2: Left
+  { scroll: 2, pos: [3, -3.2, 5], rot: [degToRad(0), degToRad(-50), 0] },  // Section 3: Right again
+  { scroll: 3, pos: [-3, -7, 10], rot: [0, degToRad(70), 0] }, // Section 4: Left again
+];
 
-  const scale = 0.01;
+
+  const scale = 0.007;
 
   useFrame(({ clock }) => {
     if (!modelRef.current) return;
+
     const scrollProgress = scrollY.current / window.innerHeight;
 
     let start = sections[0];
     let end = sections[sections.length - 1];
 
+    // Find current section range
     for (let i = 0; i < sections.length - 1; i++) {
       if (
         scrollProgress >= sections[i].scroll &&
@@ -41,6 +45,7 @@ const Model = ({ scrollY }) => {
       1
     );
 
+    // Smooth interpolation
     const x = start.pos[0] + (end.pos[0] - start.pos[0]) * sectionProgress;
     const y = start.pos[1] + (end.pos[1] - start.pos[1]) * sectionProgress;
     const z = start.pos[2] + (end.pos[2] - start.pos[2]) * sectionProgress;
@@ -49,9 +54,17 @@ const Model = ({ scrollY }) => {
     const rotY = start.rot[1] + (end.rot[1] - start.rot[1]) * sectionProgress;
     const rotZ = start.rot[2] + (end.rot[2] - start.rot[2]) * sectionProgress;
 
-    // Floating + slow rotation
-    modelRef.current.position.set(x, y + Math.sin(clock.getElapsedTime()) * 0.2, z);
-    modelRef.current.rotation.set(rotX, rotY + Math.sin(clock.getElapsedTime()) * 0.05, rotZ);
+    // Floating + subtle rotation motion
+    modelRef.current.position.set(
+      x,
+      y + Math.sin(clock.getElapsedTime()) * 0.25,
+      z
+    );
+    modelRef.current.rotation.set(
+      rotX,
+      rotY + Math.sin(clock.getElapsedTime()) * 0.05,
+      rotZ
+    );
   });
 
   // Entrance animation
