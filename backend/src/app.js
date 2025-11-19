@@ -6,7 +6,11 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  methods: ["GET","POST","PUT","DELETE","OPTIONS"]
+}));
+
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
 
