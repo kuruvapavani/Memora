@@ -3,6 +3,7 @@ import cors from 'cors';
 import authRoutes from "./routes/authRoutes.js";
 import capsuleRoutes from "./routes/capsuleRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import reminderRoutes from "./routes/remainderRoutes.js";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/reminders',reminderRoutes);
 app.use('/api/capsule',capsuleRoutes);
 app.use('/api/upload',uploadRoutes);
 app.use((req, res, next) => {

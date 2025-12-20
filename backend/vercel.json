@@ -8,8 +8,14 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "src/server.js"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/reminders/send",
+      "schedule": "30 15 * * *"
     }
   ]
 }
